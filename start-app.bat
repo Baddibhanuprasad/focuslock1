@@ -1,0 +1,3 @@
+@echo off
+echo Starting Focus Mode Desktop Application...
+npm start
