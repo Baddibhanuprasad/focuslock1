@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Mode — Personal Focus & Learning Assistant</title>
+  
+  <!-- Modern Clean Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- MediaPipe Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <div class="app-wrapper">
+    
+    <!-- LEFT SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">🎯</div>
+        <div class="brand-text">
+          <h2>Focus Mode</h2>
+          <span class="version-tag">Desktop v1.3</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button id="nav-focus" class="nav-item active" onclick="switchTab('focus')">
+          <span class="nav-icon">🎯</span>
+          <span>Focus & Shield</span>
+        </button>
+        
+        <button id="nav-roadmap" class="nav-item" onclick="switchTab('roadmap')">
+          <span class="nav-icon">🗺️</span>
+          <span>Skill Roadmap</span>
+        </button>
+
+        <button id="nav-history" class="nav-item" onclick="switchTab('history')">
+          <span class="nav-icon">📈</span>
+          <span>Session History</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="btn-toggle-sound" class="sound-btn" onclick="toggleSoundFX()">
+          <span id="sound-icon">🔊</span> Sound Alerts: <strong id="sound-status-lbl">ON</strong>
+        </button>
+        <div class="privacy-mini">
+          <span>🔒 100% On-Device Privacy</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      
+      <!-- TOP STATUS BAR -->
+      <header class="top-bar">
+        <div class="top-title">
+          <h1 id="page-title">Focus Session & Shield</h1>
+          <p id="page-subtitle">Set your timer, silence notifications, and stay alert.</p>
+        </div>
+
+        <div class="top-status-pills">
+          <div id="dnd-badge" class="pill pill-off">
+            <span class="dot"></span> OS DND: OFF
+          </div>
+          <div id="yt-badge" class="pill pill-ready">
+            <span class="dot"></span> Distraction Shield: Ready
+          </div>
+        </div>
+      </header>
+
+      <!-- DISTRACTION ALERT BANNER -->
+      <div id="distraction-alert-banner" class="alert-banner hidden">
+        <div class="alert-left">
+          <span class="alert-bell">🚨</span>
+          <div>
+            <strong>DISTRACTION DETECTED!</strong>
+            <p id="distraction-alert-msg">You opened YouTube Shorts / Instagram. Return to your goal!</p>
+          </div>
+        </div>
+        <button class="btn btn-alert-dismiss" onclick="dismissDistractionAlert()">Back to Focus</button>
+      </div>
+
+      <!-- SECTION 1: FOCUS MODE & MONITORING (TAB 1) -->
+      <section id="view-focus" class="view-section active">
+        <div class="two-column-layout">
+          
+          <!-- FOCUS TIMER CARD -->
+          <div class="card timer-card">
+            <div class="card-head">
+              <h3>Focus Session Timer</h3>
+              <span id="session-status-badge" class="status-badge badge-inactive">Inactive</span>
+            </div>
+
+            <div class="timer-circle-container">
+              <svg class="timer-svg" width="200" height="200">
+                <circle class="timer-bg" cx="100" cy="100" r="85"></circle>
+                <circle id="timer-progress-bar" class="timer-fill" cx="100" cy="100" r="85"></circle>
+              </svg>
+              <div class="timer-center-text">
+                <span id="timer-text" class="clock-digits">25:00</span>
+                <span id="timer-goal-label" class="clock-sublabel">Select a Goal to Begin</span>
+              </div>
+            </div>
+
+            <!-- PRESET GOAL CHIPS -->
+            <div class="preset-section">
+              <span class="preset-title">Quick Goals:</span>
+              <div class="chip-row">
+                <button class="goal-chip" onclick="selectPresetGoal('Learn Data Analysis')">📊 Data Analysis</button>
+                <button class="goal-chip" onclick="selectPresetGoal('Frontend Developer')">💻 Frontend Dev</button>
+                <button class="goal-chip" onclick="selectPresetGoal('UI/UX Design')">🎨 UI/UX Design</button>
+                <button class="goal-chip" onclick="selectPresetGoal('Cybersecurity')">🛡️ Cybersecurity</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="goal-input">Goal Tag / Focus Topic</label>
+              <input type="text" id="goal-input" placeholder="e.g. Learn UI/UX Design" value="Learn UI/UX Design">
+            </div>
+
+            <div class="form-group">
+              <label for="duration-select">Focus Duration</label>
+              <div class="duration-input-wrapper">
+                <select id="duration-select" onchange="handleDurationChange()">
+                  <option value="5">5 Minutes (Quick Test)</option>
+                  <option value="15">15 Minutes</option>
+                  <option value="25" selected>25 Minutes (Pomodoro)</option>
+                  <option value="45">45 Minutes</option>
+                  <option value="60">60 Minutes</option>
+                  <option value="custom">⚙️ Custom Duration...</option>
+                </select>
+                <input type="number" id="custom-duration-input" min="1" max="300" placeholder="Custom mins..." class="hidden" style="margin-top: 8px;">
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button id="btn-start-focus" class="btn btn-primary btn-full" onclick="startFocusSession()">▶ Start Focus Session</button>
+              <button id="btn-end-focus" class="btn btn-danger btn-full hidden" onclick="endFocusSession()">⏹ End Session</button>
+            </div>
+
+            <div class="simple-metrics-grid">
+              <div class="simple-metric">
+                <span class="metric-num" id="metric-distractions">0</span>
+                <span class="metric-text">Distractions</span>
+              </div>
+              <div class="simple-metric">
+                <span class="metric-num" id="metric-drowsy">0</span>
+                <span class="metric-text">Drowsy Alerts</span>
+              </div>
+              <div class="simple-metric">
+                <span class="metric-num" id="metric-presence">Present</span>
+                <span class="metric-text">Your Status</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCREEN & WEBCAM MONITORING CARD -->
+          <div class="card monitor-card">
+            <div class="card-head">
+              <h3>Smart Screen & Webcam Monitor</h3>
+              <span id="webcam-status-chip" class="status-badge badge-neutral">Camera Active</span>
+            </div>
+
+            <div class="clean-video-wrapper">
+              <video id="webcam-video" playsinline muted style="display: none;"></video>
+              <canvas id="webcam-canvas" width="360" height="220"></canvas>
+              <div class="video-overlay-badge">
+                <span id="presence-badge" class="badge-present">🎯 Alert & Focused</span>
+              </div>
+            </div>
+
+            <!-- USER FRIENDLY STATUS CARDS (NO NOISY GRAPHS) -->
+            <div class="status-cards-grid">
+              <div class="status-box">
+                <span class="box-icon">👁️</span>
+                <div>
+                  <span class="box-label">Eye Alertness</span>
+                  <strong id="ear-status-text" class="box-value value-good">Normal & Alert</strong>
+                </div>
+              </div>
+
+              <div class="status-box">
+                <span class="box-icon">💻</span>
+                <div>
+                  <span class="box-label">Active App</span>
+                  <strong id="active-proc-name" class="box-value">chrome.exe</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTIVE WINDOW CLASSIFIER BOX -->
+            <div class="window-info-box">
+              <div class="info-row">
+                <span class="info-label">Active Title:</span>
+                <span id="active-win-title" class="info-val">Desktop Workspace</span>
+              </div>
+              <div class="info-row margin-top">
+                <span class="info-label">Content Type:</span>
+                <span id="active-category-pill" class="cat-pill pill-educational">Educational</span>
+              </div>
+            </div>
+
+            <!-- PRIVACY STATEMENT -->
+            <div class="privacy-note">
+              <strong>🔒 Simple Privacy Guarantee:</strong>
+              <p>Everything runs 100% on your device. Video frames are never saved or uploaded anywhere.</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECTION 2: SKILL ROADMAP GENERATOR (TAB 2) -->
+      <section id="view-roadmap" class="view-section hidden">
+        <div class="card roadmap-workspace-card">
+          <div class="card-head">
+            <div>
+              <h3>AI Skill Roadmap Generator</h3>
+              <p class="section-desc">Type your target goal to generate a step-by-step roadmap with free courses first and resume certificates second.</p>
+            </div>
+          </div>
+
+          <div class="roadmap-search-box">
+            <input type="text" id="roadmap-goal-input" placeholder="e.g. Learn UI/UX Design, Become Frontend Developer, Learn Data Analysis..." value="I want to learn UI/UX design">
+            <button id="btn-gen-roadmap" class="btn btn-secondary" onclick="generateRoadmap()">✨ Generate Roadmap</button>
+          </div>
+
+          <div id="roadmap-results-container" class="roadmap-output-list">
+            <div class="empty-roadmap-state">
+              <div class="empty-icon">🗺️</div>
+              <h4>No Roadmap Generated Yet</h4>
+              <p>Type a career or skill goal above and click <strong>Generate Roadmap</strong> to get started.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: SESSION HISTORY (TAB 3) -->
+      <section id="view-history" class="view-section hidden">
+        <div class="card">
+          <div class="card-head">
+            <h3>Focus Session History</h3>
+            <button class="btn btn-sm btn-outline" onclick="loadHistory()">🔄 Refresh</button>
+          </div>
+
+          <div class="table-container">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Goal Tag</th>
+                  <th>Duration</th>
+                  <th>Distraction Count</th>
+                  <th>Drowsy Alerts</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <tr>
+                  <td colspan="6" class="text-center">No focus sessions logged yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- WAKE-UP MICRO-TASK MODAL FOR DROWSINESS -->
+  <div id="wakeup-modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-icon">😴</div>
+      <h2>Wake-Up Challenge!</h2>
+      <p>You appear drowsy. Solve this simple 1-line math problem to resume your timer:</p>
+
+      <div class="math-card">
+        <span id="math-problem-text">18 + 27 = ?</span>
+      </div>
+
+      <div class="form-group">
+        <input type="number" id="math-answer-input" placeholder="Enter answer..." autofocus>
+      </div>
+
+      <div id="math-error-msg" class="error-text hidden">Incorrect answer. Try again!</div>
+
+      <button class="btn btn-primary btn-full" onclick="submitWakeUpTask()">Verify & Resume Session</button>
+    </div>
+  </div>
+
+  <!-- Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
