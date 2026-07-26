@@ -1,0 +1,22 @@
+{
+  "name": "focus-mode",
+  "version": "1.2.0",
+  "description": "Focus Mode Desktop Application - Focus Timer, MediaPipe EAR Drowsiness Monitor, YouTube Auto-Pause Extension, AI Skill Roadmap",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^34.5.8"
+  }
+}
